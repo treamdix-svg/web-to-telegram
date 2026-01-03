@@ -22,11 +22,12 @@ app.all('/webhook', async (req, res) => {
   }
 
   // 🛡️ anti spam
-  const now = Date.now()
-  if (now - lastHit < LIMIT_MS) {
-    return res.send('Slow down')
-  }
-  lastHit = now
+// const now = Date.now()
+// if (now - lastHit < LIMIT_MS) {
+//   return res.send('Slow down')
+// }
+// lastHit = now
+
 
   const tipe = req.body.tipe || req.query.tipe || 'ORDER'
 
@@ -81,5 +82,6 @@ const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
   console.log('Webhook produksi aktif')
 })
+
 
 
