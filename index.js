@@ -6,10 +6,10 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 // ===== KONFIGURASI =====
-const BOT_TOKEN = '8229069332:AAH6kuconu8amMGvWVcp4jM68X3pDkeJpe4'
+const BOT_TOKEN = '8229069332:AAG_xJtl6ZRMexHENgI_f9uEAd6HnXR3WFA'
 const ADMIN_IDS = ['5555675824'] // tambah admin: ['id1','id2']
 const SECRET_KEY = 'xstreamku'
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbYAgQu5_MLY90DY_5FPe7J-CE5Z922UPc7ebU7NsiXSLwXTikLd1A32DUvNv1CDv/exec'
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyIAq9u5_MLY90OY_5FPe7J-CE5Yz922UPc7ebU7VnsiXSLwXTikLd1A32DUvNv1CDv/exec'
 
 // rate limit sederhana (anti spam ringan)
 let lastHit = 0
@@ -81,4 +81,5 @@ const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
   console.log('Webhook produksi aktif')
 })
+
 
