@@ -6,8 +6,8 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 /* ==============================
-   KONFIGURASI
-   ============================== */
+   KONFIG
+============================== */
 const BOT_TOKEN = '8229069332:AAG_xJtl6ZRMexHENgI_f9uEAd6HnXR3WFA'
 const ADMIN_IDS = ['5555675824']
 const SECRET_KEY = 'xstreamku'
@@ -15,7 +15,7 @@ const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyIAq9u5_MLY90OY_5FPe
 
 /* ==============================
    WEBHOOK
-   ============================== */
+============================== */
 app.all('/webhook', async (req, res) => {
   try {
     if (req.query.key !== SECRET_KEY) {
@@ -23,59 +23,45 @@ app.all('/webhook', async (req, res) => {
     }
 
     /* ==============================
-       AMBIL DATA
-       ============================== */
-    const tipe    = req.query.tipe || req.body.tipe || 'ORDER'
-    const produk  = req.query.produk || req.body.produk || '-'
-    const nama    = req.query.nama || req.body.nama || '-'
-    const kontak  = req.query.kontak || req.body.kontak || '-'
-    const email   = req.query.email || req.body.email || '-'
-    const website = req.query.website || req.body.website || req.headers.host || '-'
-    const waktu   = new Date().toLocaleString('id-ID')
+       TERIMA PESAN
+    ============================== */
+    const message =
+      req.query.message ||
+      req.body.message ||
+      null
 
-    /* ==============================
-       FORMAT TELEGRAM
-       ============================== */
-    let title = '💰 PEMBAYARAN BERHASIL'
-    if (tipe === 'TEST') title = '🧪 TEST WEBHOOK'
-    if (tipe === 'ORDER') title = '🛒 ORDER MASUK'
-
-    const message = `
-${title}
-
-📦 Produk   : ${produk}
-👤 Nama     : ${nama}
-📞 Kontak   : ${kontak}
-📧 Email    : ${email}
-🌐 Website  : ${website}
-🕒 Waktu    : ${waktu}
-`
-
-    /* ==============================
-       KIRIM TELEGRAM
-       ============================== */
-    for (const chat_id of ADMIN_IDS) {
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id, text: message })
-      })
+    if (!message) {
+      return res.status(400).send('No message')
     }
 
     /* ==============================
-       KIRIM KE GOOGLE SHEET
-       ============================== */
+       KIRIM TELEGRAM
+    ============================== */
+    for (const chat_id of ADMIN_IDS) {
+      await fetch(
+        `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id,
+            text: message
+          })
+        }
+      )
+    }
+
+    /* ==============================
+       SIMPAN KE GOOGLE SHEET (OPSIONAL)
+    ============================== */
     if (SHEET_URL.startsWith('https')) {
       await fetch(SHEET_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          waktu,
-          produk,
-          nama,
-          kontak,
-          email,
-          website
+          message,
+          website: req.headers.host,
+          waktu: new Date().toLocaleString('id-ID')
         })
       })
     }
@@ -89,9 +75,9 @@ ${title}
 })
 
 /* ==============================
-   START SERVER
-   ============================== */
+   START
+============================== */
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
-  console.log('✅ Webhook aktif (Telegram + Sheet)')
+  console.log('✅ Webhook aktif')
 })
