@@ -9,7 +9,7 @@ app.use(express.urlencoded({ extended: true }))
    KONFIGURASI
    ============================== */
 const BOT_TOKEN = '8229069332:AAG_xJtl6ZRMexHENgI_f9uEAd6HnXR3WFA'
-const ADMIN_IDS = ['5555675824'] // chat_id admin
+const ADMIN_IDS = ['5555675824']
 const SECRET_KEY = 'xstreamku'
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyIAq9u5_MLY90OY_5FPe7J-CE5Yz922UPc7ebU7VnsiXSLwXTikLd1A32DUvNv1CDv/exec'
 
@@ -18,13 +18,12 @@ const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyIAq9u5_MLY90OY_5FPe
    ============================== */
 app.all('/webhook', async (req, res) => {
   try {
-    // 🔐 SECURITY
     if (req.query.key !== SECRET_KEY) {
       return res.status(403).send('Forbidden')
     }
 
     /* ==============================
-       AMBIL DATA (AMAN)
+       AMBIL DATA
        ============================== */
     const tipe    = req.query.tipe || req.body.tipe || 'ORDER'
     const produk  = req.query.produk || req.body.produk || '-'
@@ -35,7 +34,7 @@ app.all('/webhook', async (req, res) => {
     const waktu   = new Date().toLocaleString('id-ID')
 
     /* ==============================
-       FORMAT TELEGRAM (FINAL)
+       FORMAT TELEGRAM
        ============================== */
     let title = '💰 PEMBAYARAN BERHASIL'
     if (tipe === 'TEST') title = '🧪 TEST WEBHOOK'
@@ -53,15 +52,30 @@ ${title}
 `
 
     /* ==============================
-       KIRIM KE TELEGRAM
+       KIRIM TELEGRAM
        ============================== */
     for (const chat_id of ADMIN_IDS) {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id, text: message })
+      })
+    }
+
+    /* ==============================
+       KIRIM KE GOOGLE SHEET
+       ============================== */
+    if (SHEET_URL.startsWith('https')) {
+      await fetch(SHEET_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          chat_id,
-          text: message
+          waktu,
+          produk,
+          nama,
+          kontak,
+          email,
+          website
         })
       })
     }
@@ -79,6 +93,5 @@ ${title}
    ============================== */
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
-  console.log('✅ Webhook aktif & aman')
+  console.log('✅ Webhook aktif (Telegram + Sheet)')
 })
-
