@@ -11,7 +11,7 @@ app.use(express.urlencoded({ extended: true }))
 const BOT_TOKEN = '8229069332:AAG_xJtl6ZRMexHENgI_f9uEAd6HnXR3WFA'
 const ADMIN_IDS = ['5555675824'] // chat_id admin
 const SECRET_KEY = 'xstreamku'
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyIAq9u5_MLY90OY_5FPe7J-CE5Yz922UPc7ebU7VnsiXSLwXTikLd1A32DUvNv1CDv/exec' // opsional
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyIAq9u5_MLY90OY_5FPe7J-CE5Yz922UPc7ebU7VnsiXSLwXTikLd1A32DUvNv1CDv/exec'
 
 /* ==============================
    WEBHOOK
@@ -81,3 +81,4 @@ const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
   console.log('✅ Webhook aktif & aman')
 })
+
