@@ -11,6 +11,23 @@ const ADMIN_IDS  = ['5555675824']
 const SECRET_KEY = 'xstreamku'
 
 /* ==============================
+   TELEGRAM
+============================== */
+async function kirimTelegram(chat_id, text) {
+  const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id, text }),
+    timeout: 10000
+  })
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok || data.ok === false) {
+    throw new Error(`chat ${chat_id}: ${res.status} ${data.description || ''}`.trim())
+  }
+}
+
+/* ==============================
    WEBHOOK
 ============================== */
 app.get('/webhook', async (req, res) => {
@@ -45,15 +62,15 @@ ${title}
 🕒 Waktu    : ${waktu}
 `
 
-    for (const chat_id of ADMIN_IDS) {
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id,
-          text: message
-        })
-      })
+    const results = await Promise.allSettled(
+      ADMIN_IDS.map(chat_id => kirimTelegram(chat_id, message))
+    )
+
+    const gagal = results.filter(r => r.status === 'rejected')
+    gagal.forEach(r => console.error('TELEGRAM ERROR', r.reason.message))
+
+    if (gagal.length === results.length) {
+      return res.status(502).send('Gagal mengirim ke Telegram')
     }
 
     res.send('OK')
